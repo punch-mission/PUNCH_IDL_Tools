@@ -1,11 +1,11 @@
-pro read_punch, tfiles, index, data, $
+pro read_punch, tfile, index, data, $
                 use_shared_lib=use_shared_lib,shared_lib_path=shared_lib_path, $
                 uncertainty=uncertainty, data_uncert = data_uncert, index_uncert = index_uncert
 
   ;   Purpose: read compressed PUNCH fits files
   ;
   ;   Input Parameters:
-  ;      tfiles - file to read
+  ;      tfile - file to read
   ;
   ;   Output Parameters:
   ;
@@ -39,11 +39,11 @@ pro read_punch, tfiles, index, data, $
   ;   read_punch, tfile, index, data, /use_shared_lib, /uncertainty, $
   ;               data_uncert=data_uncert, index_uncert=index_uncert
   ;
- 
+  ;   read_punch, './PUNCH_L3_MPM_20230704013600.fits', index, data, use_shared_lib=1
  
   loud=1-keyword_set(silent)
-  mreadfits_header,tfiles,index,only_tags=only_tags,extension=1
-  mreadfits_header,tfiles,index_uncert,only_tags=only_tags,extension=2
+  mreadfits_header,tfile,index,only_tags=only_tags,extension=1
+  mreadfits_header,tfile,index_uncert,only_tags=only_tags,extension=2
     
   use_shared_lib=keyword_set(use_shared_lib) or data_chk(shared_lib_path,/string)
 
@@ -64,7 +64,7 @@ pro read_punch, tfiles, index, data, $
   
   ndata=n_params() gt 2 and ~keyword_set(only_uncompress)
   
-  data = fitsio_read_image(tfiles, htest, so_path=so_path) 
+  data = fitsio_read_image(tfile, htest, so_path=so_path) 
   shtest=fitshead2struct(htest)
 
 ; removing 'z' from few keywords
@@ -81,7 +81,7 @@ pro read_punch, tfiles, index, data, $
   
   if keyword_set(uncertainty) then begin
     print, 'Reading uncertainty HDU...'
-    data_uncert = fitsio_read_image(tfiles+'[2]', htest, so_path=so_path) 
+    data_uncert = fitsio_read_image(tfile+'[2]', htest, so_path=so_path) 
     shtest=fitshead2struct(htest)
 
     ; removing 'z' from few keywords
@@ -98,4 +98,5 @@ pro read_punch, tfiles, index, data, $
   endif
   
   print, 'Go PUNCH!'  
+  return
 end
