@@ -39,7 +39,7 @@ pro read_punch, tfile, index, data, $
   ;   read_punch, tfile, index, data, /use_shared_lib, /uncertainty, $
   ;               data_uncert=data_uncert, index_uncert=index_uncert
   ;
- 
+  ;   read_punch, './PUNCH_L3_MPM_20230704013600.fits', index, data, use_shared_lib=1
  
   loud=1-keyword_set(silent)
   mreadfits_header,tfile,index,only_tags=only_tags,extension=1
