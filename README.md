@@ -10,7 +10,7 @@ These tools require the `gen` and `astrom` packages from
 
 Reads a PUNCH FITS file into IDL. This should handle the
 Rice-compressed files either with the shared library and
-`fitsio_read_image` or via the [`imcopy`][imcopy] command, and the
+`fitsio_read_image` or via the [`imcopy`](####imcopy) command, and the
 regular `readfits` procedure.
 
 **N.B.** The layout of a Rice-compressed file is assumed to be:
@@ -55,12 +55,16 @@ here on GitHub.
 ## Contributing
 We welcome all contributions. Please open a pull request to contribute.
 
-[imcopy]: `imcopy` is an anciliary program that is part of the cfitsio
+
+#### imcopy
+
+is an anciliary program that is part of the cfitsio
 library. However many Linux distributions do not build it by
 default. It can be simply built by downloading the [cfitsio
-source](https://heasarc.gsfc.nasa.gov/fitsio/) and 
-going to the utilities directory and running:
-```
-gcc -o imcopy imcopy.c $(pkg-config -libs -cflags cfitsio$)
-```
+source](https://heasarc.gsfc.nasa.gov/fitsio/) and going to the
+`utilities` subdirectory and compiling with (assuming the cfitsio
+library is installed):
+
+    gcc -o imcopy imcopy.c $(pkg-config -libs -cflags cfitsio$)
+
 and copying the executable to somewhere in your path (e.g. `~/bin`).
