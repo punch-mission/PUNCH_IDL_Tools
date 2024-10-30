@@ -83,7 +83,7 @@ pro read_punch, tfile, index, data, $
   mreadfits_header, tfile, tlh, only_tags = 'NAXIS'
 
   hstructs = n_elements(string_header) ne 0 && $
-     keyword_set(string_header)
+     ~keyword_set(string_header)
   
   if tlh.naxis eq 0 then begin
                                 ; If NAXIS == 0 in the primary header,
@@ -194,7 +194,7 @@ pro read_punch, tfile, index, data, $
         get_distort  = get_distort && sxpar(index, 'CPDIS1') eq 'LOOKUP'
 
         if hstructs then index = fitshead2struct(hdr) $
-        else index = hdr $
+        else index = hdr
         
         if uncertainty then begin
            if n_ext eq 1 then begin
