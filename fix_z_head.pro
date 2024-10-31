@@ -28,7 +28,8 @@
 ;	Original: 24/10/24; SJT
 ;-
 
-pro fix_z_head, hdr, list = list, remove = remove, extension = extension
+pro fix_z_head, hdr, list = list, remove = remove, extension = $
+                extension, verbose = verbose
 
   if ~keyword_set(list) then olist = ['BITPIX', $
                                       'NAXIS', $
@@ -61,10 +62,10 @@ pro fix_z_head, hdr, list = list, remove = remove, extension = extension
 
   if keyword_set(remove) then begin
      locs = where(strpos(hdr, 'Z') eq 0, nz)
-     if nz ne 0 then print, hdr[locs]
+     if keyword_set(verbose) && nz ne 0 then print, hdr[locs]
      for j =  nz -1, 0, -1 do begin
         ss = strsplit(hdr[locs[j]], '=', /extr)
-        print, ss[0]
+        if keyword_set(verbose) then print, ss[0]
         sxdelpar, hdr, strtrim(ss[0])
      endfor
   endif
