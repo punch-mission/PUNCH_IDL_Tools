@@ -191,7 +191,7 @@ pro read_punch, tfile, index, data, $
         endif else begin
            data = readfits(ucfile, hdr, ext = 1)
         endelse
-        get_distort  = get_distort && sxpar(index, 'CPDIS1') eq 'LOOKUP'
+        get_distort  = get_distort && sxpar(hdr, 'CPDIS1') eq 'LOOKUP'
 
         if hstructs then index = fitshead2struct(hdr) $
         else index = hdr
