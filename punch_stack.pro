@@ -120,18 +120,18 @@ pro punch_stack, sdata, hdr, uncertain = uncertain, uhdr = uhdr, $
         
         nd = size(data, /n_dim)
         sz = size(data, /dim)
-
+        dtype = size(data, /type)
         if nd eq 2 then begin
            if n_elements(polar) ne 0 then $
               message, /continue, "Single-plane input file, " + $
                        "ignoring POLAR setting."
            pflag = 0
-           sdata = fltarr(sz[0], sz[1], nfiles)
+           sdata = make_array(sz[0], sz[1], nfiles, type = dtype)
         endif else if n_elements(polar) eq 0 then begin
-           sdata = fltarr(sz[0], sz[1], sz[2], nfiles)
+           sdata = make_array(sz[0], sz[1], sz[2], nfiles, type = dtype)
            pflag = 2
         endif else begin
-           sdata = fltarr(sz[0], sz[1], nfiles)
+           sdata = make_array(sz[0], sz[1], nfiles, type = dtype)
            pflag = keyword_set(polar)
         endelse
         
@@ -160,9 +160,10 @@ pro punch_stack, sdata, hdr, uncertain = uncertain, uhdr = uhdr, $
                        "file, ignoring."
               ucflag = 0b
            endif else begin
+              utype = size(udata, /type)
               if pflag eq 2 then uncertain = $
-                 fltarr(sz[0], sz[1], sz[2], nfiles) $
-              else  uncertain = fltarr(sz[0], sz[1], nfiles)
+                 make_array(sz[0], sz[1], sz[2], nfiles, type = utype) $
+              else  uncertain = make_array(sz[0], sz[1], nfiles, type = utypee)
               uheader = list(length = nfiles)
               ucflag = 1b
            endelse
@@ -177,8 +178,9 @@ pro punch_stack, sdata, hdr, uncertain = uncertain, uhdr = uhdr, $
               dflag = 0b
            endif else begin
               sd = size(xdistort1, /dim)
-              xdistort = fltarr(sd[0], sd[1], nfiles)
-              ydistort = fltarr(sd[0], sd[1], nfiles)
+              td = size(xdistort1, /type)
+              xdistort = make_array(sd[0], sd[1], nfiles, type = td)
+              ydistort = make_array(sd[0], sd[1], nfiles, type = td)
               xdhdr = list(length = nfiles)
               ydhdr = list(length = nfiles)
               dflag = 1b

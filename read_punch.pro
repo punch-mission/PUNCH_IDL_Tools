@@ -121,7 +121,8 @@ pro read_punch, tfile, index, data, $
      if use_shared_lib then begin
         data = fitsio_read_image(tfile, htest, so_path = so_path)
         
-        get_distort  = get_distort && sxpar(index, 'CPDIS1') eq 'LOOKUP'
+        get_distort  = get_distort && $
+           strtrim(sxpar(htest, 'CPDIS1')) eq 'LOOKUP'
         
 ; removing 'z' from keywords
         
@@ -191,7 +192,8 @@ pro read_punch, tfile, index, data, $
         endif else begin
            data = readfits(ucfile, hdr, ext = 1)
         endelse
-        get_distort  = get_distort && sxpar(hdr, 'CPDIS1') eq 'LOOKUP'
+        get_distort  = get_distort && $
+           strtrim(sxpar(hdr, 'CPDIS1')) eq 'LOOKUP'
 
         if hstructs then index = fitshead2struct(hdr) $
         else index = hdr
