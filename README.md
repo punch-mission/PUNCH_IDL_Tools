@@ -1,8 +1,19 @@
 # PUNCH_IDL_Tools
-Tools for analysis of PUNCH data in IDL and/or GDL.
+Tools for accessing PUNCH data in IDL and/or GDL.
 
 These tools require the `gen` and `astrom` packages from
 [SolarSoft](https://www.lmsal.com/solarsoft/).
+
+The intent is that they will allow SolarSoft users to ingest and
+interpret any level of PUNCH data from Level 0 to 3. 
+
+They should work equally well in recent versions of IDL and the current
+GIT of GDL.
+
+## Status
+
+These routines have as yet had limited testing. In particular, as yet
+no images with non-null distortion tables have been available for testing.
 
 ## Tools provided.
 
@@ -35,6 +46,11 @@ not possible for RIce-compressed files. These routines therefore
 combine the relevant parts of `fits_xy2ad` and `xy2ad`, and
 `fits_ad2xy` and `ad2xy` respectively.
 
+### PUNCH_WCS_GET_COORD and PUNCH_WCS_GET_PIXEL
+
+These allow the use of distortion tables alongside the WCS family of
+SSWIDL astrometry codes.
+
 ### FIX_Z_HEAD
 
 Modifies header keys starting with "Z", in Rice-compressed files read
@@ -51,6 +67,9 @@ All routines contain a documentation header that can be read via
 
 For further assistance, please open an issue or create a discussion
 here on GitHub.
+
+Note that at present the distortion tables are not tested as we do not
+yet have data with non-null tables.
 
 ## Contributing
 We welcome all contributions. Please open a pull request to contribute.
