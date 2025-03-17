@@ -64,7 +64,7 @@
 ;     two images tB and pB (depending on level of data product). 
 ;   
 ; History:
-;	Original: March '24, M Hughes
+;	Original: March '24, R Patel
 ;	Restore(?) ability to use "imcopy" for GDL etc. and other
 ;	extensive tidying: Jun-Jul; '24, SJT
 ;	Allow return of distortion tables: 23/10/24; SJT
