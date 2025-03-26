@@ -68,6 +68,8 @@
 ;	Restore(?) ability to use "imcopy" for GDL etc. and other
 ;	extensive tidying: Jun-Jul; '24, SJT
 ;	Allow return of distortion tables: 23/10/24; SJT
+;	Use fits_info to find distortion tables (they're not
+;	always EXT3 & EXT4): 21/3/25; SJT
 ;-
 
 pro read_punch, tfile, index, data, $
@@ -117,7 +119,12 @@ pro read_punch, tfile, index, data, $
         endif
      endif
 
-     
+     if get_distort then begin
+        fits_info, tfile, extname = xn, n_ext = nx, /silent
+        ldist = where(xn eq 'WCSDVARR', ndr)
+        get_distort = ndr eq 2
+     endif
+
      if use_shared_lib then begin
         data = fitsio_read_image(tfile, htest, so_path = so_path)
         
@@ -145,9 +152,10 @@ pro read_punch, tfile, index, data, $
 
         if get_distort then begin
            print,  "Reading distortion tables ..."
-           xdistort = fitsio_read_image(tfile+'[3]', xdidx, so_path = $
+           sld = string(ldist, format = "('[',i0,']')")
+           xdistort = fitsio_read_image(tfile+sld[0], xdidx, so_path = $
                                         so_path)
-           ydistort = fitsio_read_image(tfile+'[4]', ydidx, so_path = $
+           ydistort = fitsio_read_image(tfile+sld[1], ydidx, so_path = $
                                         so_path)
 
            fix_z_head, xdidx, /remove
@@ -209,8 +217,8 @@ pro read_punch, tfile, index, data, $
         endif
 
         if get_distort then begin
-           xdistort = readfits(ucfile, xdidx, ext = 3)
-           ydistort = readfits(ucfile, ydidx, ext = 4)
+           xdistort = readfits(ucfile, xdidx, ext = ldist[0])
+           ydistort = readfits(ucfile, ydidx, ext = ldist[1])
         endif
         
         file_delete, ucfile
