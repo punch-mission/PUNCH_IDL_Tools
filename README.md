@@ -53,9 +53,9 @@ supporting data (uncertainties and distortions) as available.
 ### PUNCH_XY2AD and PUNCH_AD2XY
 
 
-	•	punch_xy2ad: Converts a given pixel position to Right Ascension (R.A.) 
+- punch_xy2ad: Converts a given pixel position to Right Ascension (R.A.) 
                       and Declination (Dec).
-	•	punch_ad2xy: Performs the inverse operation, converting R.A. and Dec. 
+- punch_ad2xy: Performs the inverse operation, converting R.A. and Dec. 
                       back to pixel coordinates.
 
 These functions also corrects for optical distortion (if distortion table is available) 
@@ -67,8 +67,8 @@ In the current SolarSoft astrometry package, accessing distortion tables require
 the file with fits_open. However, this approach does not work for Rice-compressed FITS files.
 To overcome this limitation, these routines integrate the relevant functionalities of:
 
-	•	fits_xy2ad and xy2ad (for pixel-to-R.A./Dec. conversion)
-	•	fits_ad2xy and ad2xy (for R.A./Dec.-to-pixel conversion)
+- fits_xy2ad and xy2ad (for pixel-to-R.A./Dec. conversion)
+- fits_ad2xy and ad2xy (for R.A./Dec.-to-pixel conversion)
 
 By combining these components, punch_xy2ad and punch_ad2xy ensure accurate coordinate 
 transformations even for compressed files.
@@ -79,10 +79,9 @@ transformations even for compressed files.
 These routines support the conversion of WCS structure from data coordinates to IDL 
 pixel position and back. These allow the use of distortion tables alongside the 
 WCS family of SSWIDL astrometry codes.
-
-	•	punch_wcs_get_coord: This procedure takes a WCS structure, and calculates the 
+- punch_wcs_get_coord: This procedure takes a WCS structure, and calculates the 
                             data coordinates at each IDL pixel position.
-	•	punch_wcs_get_pixel: This procedure is inverse of punch_wcs_get_coord and takes 
+- punch_wcs_get_pixel: This procedure is inverse of punch_wcs_get_coord and takes 
                             a WCS structure, and converts coordinates back into IDL pixel positions.
 
 
