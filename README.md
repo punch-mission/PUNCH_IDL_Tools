@@ -46,21 +46,44 @@ extension.
 
 ### PUNCH_STACK
 
-Reads the data from a list of PUNCH FITS files into a data cube. Also
-returns supporting data (uncertainties and distortions) as available.
+Reads the data using `read_punch.pro` from a list of PUNCH FITS files into 
+data cubes of total brightness and polarized brightness. Also returns 
+supporting data (uncertainties and distortions) as available.
 
 ### PUNCH_XY2AD and PUNCH_AD2XY
 
-In the current SolarSoft astrometry package, the only way to access
-distortion tables is by opening the file with `fits_open`, but this is
-not possible for Rice-compressed files. These routines therefore
-combine the relevant parts of `fits_xy2ad` and `xy2ad`, and
-`fits_ad2xy` and `ad2xy` respectively.
+
+- punch_xy2ad: Converts a given pixel position to Right Ascension (R.A.) 
+                      and Declination (Dec).
+- punch_ad2xy: Performs the inverse operation, converting R.A. and Dec. 
+                      back to pixel coordinates.
+
+These functions also correct for optical distortion (if distortion table is available) 
+in the input PUNCH file.
+
+Why These Functions?
+
+In the current SolarSoft astrometry package, accessing distortion tables requires opening 
+the file with fits_open. However, this approach does not work for Rice-compressed FITS files.
+To overcome this limitation, these routines integrate the relevant functionalities of:
+
+- fits_xy2ad and xy2ad (for pixel-to-R.A./Dec. conversion)
+- fits_ad2xy and ad2xy (for R.A./Dec.-to-pixel conversion)
+
+By combining these components, punch_xy2ad and punch_ad2xy ensure accurate coordinate 
+transformations even for compressed files.
+
 
 ### PUNCH_WCS_GET_COORD and PUNCH_WCS_GET_PIXEL
 
-These allow the use of distortion tables alongside the WCS family of
-SSWIDL astrometry codes.
+These routines support the conversion of WCS structure from data coordinates to IDL 
+pixel position and back. These allow the use of distortion tables alongside the 
+WCS family of SSWIDL astrometry codes.
+- punch_wcs_get_coord: This procedure takes a WCS structure, and calculates the 
+                            data coordinates at each IDL pixel position.
+- punch_wcs_get_pixel: This procedure is inverse of punch_wcs_get_coord and takes 
+                            a WCS structure, and converts coordinates back into IDL pixel positions.
+
 
 ### FIX_Z_HEAD
 
@@ -99,3 +122,8 @@ library is installed):
 
 and copying the executable to somewhere in your path
 (e.g. `/usr/local/bin` or `~/bin` if you don't have root access).
+
+
+### Using latest SSW package
+We recommend using the latest SSW package to run these routines smoothly
+across various platforms (Windows, Linux, MacOS etc.).
