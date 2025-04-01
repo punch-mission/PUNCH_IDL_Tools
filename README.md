@@ -58,7 +58,7 @@ supporting data (uncertainties and distortions) as available.
 - punch_ad2xy: Performs the inverse operation, converting R.A. and Dec. 
                       back to pixel coordinates.
 
-These functions also corrects for optical distortion (if distortion table is available) 
+These functions also correct for optical distortion (if distortion table is available) 
 in the input PUNCH file.
 
 Why These Functions?
@@ -122,3 +122,8 @@ library is installed):
 
 and copying the executable to somewhere in your path
 (e.g. `/usr/local/bin` or `~/bin` if you don't have root access).
+
+
+### Using latest SSW package
+We recommend using the latest SSW package to run these routines smoothly
+across various platforms (Windows, Linux, MacOS etc.).
