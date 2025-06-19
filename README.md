@@ -20,7 +20,7 @@ testing.
 All testing by the Author has been on Linux systems ([OpenSuSE](https://www.opensuse.org/) with IDL
 and [Manjaro](https://manjaro.org/) with GDL)
 
-## Tools provided.
+## Tools provided
 
 ### READ_PUNCH:
 
@@ -94,22 +94,7 @@ by `fitsio_read_image` to be the actual image parameters
 `read_punch`.
 
 
-## Getting help
-
-All routines contain a documentation header that can be read via
-`doc_library`.
-
-For further assistance, please open an issue or create a discussion
-here on GitHub.
-
-Note that at present the distortion tables are not tested as we do not
-yet have data with non-null tables.
-
-## Contributing
-We welcome all contributions. Please open a pull request to contribute.
-
-
-#### imcopy
+## Building imcopy
 
 is an ancillary program that is part of the cfitsio
 library. However many Linux distributions do not build it by
@@ -124,6 +109,20 @@ and copying the executable to somewhere in your path
 (e.g. `/usr/local/bin` or `~/bin` if you don't have root access).
 
 
-### Using latest SSW package
+## Using latest SSW package
 We recommend using the latest SSW package to run these routines smoothly
 across various platforms (Windows, Linux, MacOS etc.).
+
+## Getting help
+
+All routines contain a documentation header that can be read via
+`doc_library`.
+
+For further assistance, please open an issue or create a discussion
+here on GitHub.
+
+Note that at present the distortion tables are not tested as we do not
+yet have data with non-null tables.
+
+## Contributing
+We welcome all contributions. Please open a pull request to contribute.
