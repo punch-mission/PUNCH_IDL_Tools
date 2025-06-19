@@ -135,7 +135,7 @@
 ;-
 ;
 function punch_wcs_get_coord, wcs, pixels, xhdr = xhdr, yhdr = yhdr, $
-                              xtable = table, ytable = ytable, $
+                              xtable = xtable, ytable = ytable, $
                               quick = quick, relative = relative, $ 
                               force_proj = force_proj, missing = $
                               missing, $
@@ -238,12 +238,12 @@ function punch_wcs_get_coord, wcs, pixels, xhdr = xhdr, yhdr = yhdr, $
      ypos = (y+1-crval1[1])/cdelt1[1] + crpix1[1]
      dxp =  interpolate(xtable, xpos, ypos)
 		
-     cdelt2 = sxpar(hdis2, 'CDELT*')
-     crval2 = sxpar(hdis2, 'CRVAL*')
-     crpix2 = sxpar(hdis2, 'CRPIX*')
+     cdelt2 = sxpar(yhdr, 'CDELT*')
+     crval2 = sxpar(yhdr, 'CRVAL*')
+     crpix2 = sxpar(yhdr, 'CRPIX*')
      xpos = (x+1-crval2[0])/cdelt2[0] + crpix2[0]
      ypos = (y+1-crval2[1])/cdelt2[1] + crpix2[1]		
-     dyp = interpolate(imdis2, xpos, ypos)
+     dyp = interpolate(ytable, xpos, ypos)
 
      pixels[0, *] = x + dxp
      pixels[1, *] = y + dyp
