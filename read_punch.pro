@@ -70,6 +70,7 @@
 ;	Allow return of distortion tables: 23/10/24; SJT
 ;	Use fits_info to find distortion tables (they're not
 ;	always EXT3 & EXT4): 21/3/25; SJT
+;	Also use fits_info to check uncertainty array: 15/5/2025; SJT
 ;-
 
 pro read_punch, tfile, index, data, $
@@ -91,12 +92,23 @@ pro read_punch, tfile, index, data, $
                                 ; If NAXIS == 0 in the primary header,
                                 ; then we have a RICE-compressed file.
 
+     fits_info, tfile, extname = xn, n_ext = nx, /silent
+
      uncertainty = arg_present(data_uncert) || $
                    arg_present(index_uncert)
+
+     if uncertainty then begin
+        lunc = where(xn eq 'UNCERTAINTY ARRAY', nun)
+        uncertainty = nun gt 0
+     endif
      
      get_distort = arg_present(xdidx) || arg_present(xdistort) || $
                    arg_present(ydidx) || arg_present(ydistort)
      
+     if get_distort then begin
+        ldist = where(xn eq 'WCSDVARR', ndr)
+        get_distort = ndr eq 2
+     endif
      use_shared_lib = keyword_set(use_shared_lib) || $
                       data_chk(shared_lib_path, /string)
 
@@ -119,11 +131,6 @@ pro read_punch, tfile, index, data, $
         endif
      endif
 
-     if get_distort then begin
-        fits_info, tfile, extname = xn, n_ext = nx, /silent
-        ldist = where(xn eq 'WCSDVARR', ndr)
-        get_distort = ndr eq 2
-     endif
 
      if use_shared_lib then begin
         data = fitsio_read_image(tfile, htest, so_path = so_path)
@@ -141,7 +148,8 @@ pro read_punch, tfile, index, data, $
         
         if uncertainty then begin
            print, 'Reading uncertainty HDU...'
-           data_uncert = fitsio_read_image(tfile+'[2]', htest, $
+           uns = string(lunc, format = "('[',i0,']')")
+           data_uncert = fitsio_read_image(tfile+uns, htest, $
                                            so_path = so_path) 
 
            fix_z_head, htest, /remove
@@ -210,7 +218,7 @@ pro read_punch, tfile, index, data, $
            if n_ext eq 1 then begin
               message, /cont, "File does not contain an uncertainty."
            endif else begin
-              data_uncert = readfits(ucfile, uhdr, ext = 2)
+              data_uncert = readfits(ucfile, uhdr, ext = lunc)
               if keyword_set(string_header) then index_uncert = uhdr $
               else index_uncert = fitshead2struct(uhdr)
            endelse
