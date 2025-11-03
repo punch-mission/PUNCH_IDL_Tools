@@ -29,14 +29,17 @@
 ;   			version dependent, and has the potential to
 ;   			crash IDL if the shared library is not
 ;   			properly compiled. Also does not work
-;   			(currently) on GDL.
+;   			(currently) on GDL. Default is use_shared_lib in IDL,
+;   			imcopy in GDL
 ;   shared_lib_path	string	optional keyword specifying path of
 ;   				shared library(with trailing slash)
 ;   				for fitsio.so, default is the same
 ;   				path as for imcopy 
 ;   imcopy_path	string	set an explicit path for imcopy.  By default,
 ;   			a version in $PATH is used if available, then in
-;			the ontology path of SolarSoft.
+;			the ontology path of SolarSoft. This could
+;			include passing  a modified executable name to
+;			search in $PATH.
 ;   /string_header	Set this explicitly to zero to convert the
 ;			main data and uncertainty headers to
 ;			structures. N.B. Distortion headers are always
@@ -71,6 +74,7 @@
 ;	Use fits_info to find distortion tables (they're not
 ;	always EXT3 & EXT4): 21/3/25; SJT
 ;	Also use fits_info to check uncertainty array: 15/5/2025; SJT
+;	Tidy default mechanism (IDL: shared, GDL: imcopy): 30/10/25; SJT
 ;-
 
 pro read_punch, tfile, index, data, $
@@ -94,6 +98,12 @@ pro read_punch, tfile, index, data, $
 
      fits_info, tfile, extname = xn, n_ext = nx, /silent
 
+     defsysv, '!gdl', exists = is_gdl
+     if is_gdl then $
+        use_shared_lib = keyword_set(use_shared_lib) $
+     else use_shared_lib = n_elements(use_shared_lib) eq 0 || $
+                           keyword_set(use_shared_lib) 
+    
      uncertainty = arg_present(data_uncert) || $
                    arg_present(index_uncert)
 
@@ -109,8 +119,7 @@ pro read_punch, tfile, index, data, $
         ldist = where(xn eq 'WCSDVARR', ndr)
         get_distort = ndr eq 2
      endif
-     use_shared_lib = keyword_set(use_shared_lib) || $
-                      data_chk(shared_lib_path, /string)
+                      
 
      if use_shared_lib then begin
         defpath = ssw_bin_path('fitsio.so', found = found, /path_only, $
@@ -174,9 +183,20 @@ pro read_punch, tfile, index, data, $
                                 ; Find IMCOPY
 
 ; Explicit first
-        if keyword_set(imcopy) &&  file_test(imcopy, /exe) then imc = $
-           imcopy $
-        else begin
+        imc = ''
+        if keyword_set(imcopy_path) then begin
+           if file_test(imcopy_path,  /exe) then imc = imcopy_path $
+           else if file_test(imcopy_path,  /dir) then begin
+              imcopy = imcopy_path+'/imcopy'
+              if file_test(imcopy_path) then imc = imcopy
+           endif else begin
+              spawn, 'which '+imcopy_path,  wi
+              if strlen(wi) gt 0 &&  strpos(wi, 'not found') eq -1 then $
+                 imc = imcopy_path
+           endelse
+        endif
+        
+       if imc eq '' then begin
 ; System first
            
            spawn, 'which imcopy', wi
@@ -185,15 +205,21 @@ pro read_punch, tfile, index, data, $
            if strlen(wi) gt 0 &&  strpos(wi, 'not found') eq -1 then $
               imc = 'imcopy' $
            else begin
+; Arch derivatives put imcopy in cfitsio-imcopy
+              spawn, 'which cfitsio-imcopy', wi
+              if strlen(wi) gt 0 &&  strpos(wi, 'not found') eq -1 then $
+                 imc = 'cfitsio-imcopy' $
+              else begin
+; If not in $PATH then look in $SSW.
               
-; If not in $PATH then look in $SSW.     
-              imc = ssw_bin_path('imcopy', /ontology, found = imcfound)
-              if ~imcfound then begin
-                 message, /cont, "IMCOPY not found in system or SSW."
-                 return
-              endif
+                 imc = ssw_bin_path('imcopy', /ontology, found = imcfound)
+                 if ~imcfound then begin
+                    message, /cont, "IMCOPY not found in system or SSW."
+                    return
+                 endif
+              endelse
            endelse
-        endelse
+        endif
 
         print, imc
         

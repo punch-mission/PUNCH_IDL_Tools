@@ -6,107 +6,19 @@ pro punch_xy2ad, x, y, astr, a, d, xhdr = xhdr, yhdr = yhdr, xtable = $
 ;
 ; PURPOSE:
 ;     Compute R.A. and Dec from X and Y and a FITS astrometry structure
-; EXPLANATION:
-;     The astrometry structure must first be extracted by EXTAST from a FITS
-;     header.   The offset from the reference pixel is computed and the CD 
-;     matrix is applied.     If distortion is present then this is corrected.
-;     If a WCS projection (Calabretta & Greisen 2002, A&A, 395, 1077) is 
-;     present, then the procedure WCSXY2SPH is used to compute astronomical
-;     coordinates.    Angles are returned in  degrees.
-;   
-;     XY2AD is meant to be used internal to other procedures.  
-;     For interactive purposes use XYAD. 
-;
-; CALLING SEQUENCE:
-;     PUNCH_XY2AD, x, y, astr, a, d   
-;
-; INPUTS:
-;     X     - row position in pixels, scalar or vector
-;     Y     - column position in pixels, scalar or vector
-;           X and Y should be in the standard IDL convention (first pixel is
-;           0), and not the FITS convention (first pixel is 1). 
-;     ASTR - astrometry structure, output from EXTAST procedure containing:
-;        .CD   -  2 x 2 array containing the astrometry parameters CD1_1 CD1_2
-;               in DEGREES/PIXEL                                   CD2_1 CD2_2
-;        .CDELT - 2 element vector giving physical increment at reference pixel
-;        .CRPIX - 2 element vector giving X and Y coordinates of reference pixel
-;               (def = NAXIS/2)
-;        .CRVAL - 2 element vector giving R.A. and DEC of reference pixel 
-;               in DEGREES
-;        .CTYPE - 2 element vector giving projection types 
-;        .LONGPOLE - scalar longitude of north pole
-;        .LATPOLE - scalar giving native latitude of the celestial pole
-;        .PV2 - Vector of projection parameter associated with latitude axis
-;             PV2 will have up to 21 elements for the ZPN projection, up to 3
-;             for the SIN projection and no more than 2 for any other
-;             projection
-;
-;     Fields added for version 2:
-;      .PV1 - Vector of projection parameters associated with longitude axis
-;      .AXES  - 2 element integer vector giving the FITS-convention axis 
-;               numbers associated with astrometry, in ascending order. 
-;               Default [1,2].
-;      .REVERSE - byte, true if first astrometry axis is Dec/latitude
-;      .COORDSYS - 1 or 2 character code giving coordinate system, including
-;                 'C' = RA/Dec, 'G' = Galactic, 'E' = Ecliptic, 'X' = unknown.
-;      .RADECSYS - String giving RA/Dec system e.g. 'FK4', 'ICRS' etc.
-;      .EQUINOX  - Double giving the epoch of the mean equator and equinox
-;      .DATEOBS  - Text string giving (start) date/time of observations
-;      .MJDOBS   - Modified julian date of start of observations.
-;      .X0Y0     - Implied offset in intermediate world coordinates if user has
-;                  specified a non-standard fiducial point via PV1 and also
-;                  has set PV1_0a =/ 0 to indicate that the offset should be
-;                  applied in order to place CRVAL at the IWC origin.
-;                  Should be *added* to the IWC derived from application of
-;                  CRPIX, CDELT, CD to the pixel coordinates.
-;
-;      .DISTORT - Optional substructure specifying distortion parameters
-;                  
-; Keyword inputs:
-;	xhdr	string	The header for the X-distortion map.
-;	yhdr	string	The header for the Y-distortion map.
-;	xtable	double	The X distortion map.
-;	ytable	double	The Y distortion map.
-;
-; OUTPUT:
-;     A - R.A. in DEGREES, same number of elements as X and Y
-;     D - Dec. in DEGREES, same number of elements as X and Y
-;
-; RESTRICTIONS:
-;       Note that all angles are in degrees, including CD and CRVAL
-;       Also note that the CRPIX keyword assumes an FORTRAN type
-;       array beginning at (1,1), while X and Y give the IDL position
-;       beginning at (0,0).   No parameter checking is performed.
-;
-; NOTES:
-;      XY2AD tests for presence of WCS coordinates by the presence of a dash 
-;      in the 5th character position in the value of CTYPE (e.g
-;      'DEC--SIN').
-; PROCEDURES USED:
-;       TAG_EXIST(), WCSXY2SPH, SIP_EVAL(), TPV_EVAL()
-; REVISION HISTORY:
-;       Written by R. Cornett, SASC Tech., 4/7/86
-;       Converted to IDL by B. Boothman, SASC Tech., 4/21/86
-;       Perform CD  multiplication in degrees  W. Landsman   Dec 1994
-;       Understand reversed X,Y (X-Dec, Y-RA) axes,   W. Landsman  October 1998
-;       Consistent conversion between CROTA and CD matrix W. Landsman Oct. 2000
-;       No special case for tangent projection W. Landsman June 2003
-;       Work for non-WCS coordinate transformations W. Landsman Oct 2004
-;       Use CRVAL reference point for non-WCS transformation  W.L. March 2007
-;       Use post V6.0 notation   W.L. July 2009
-;       Some optimisation for large input arrays & use of version 2 astr
-;       structure, J. P. Leahy July 2013
-;       Evalue TPV distortion (SCAMP) if present W. Landsman   Jan 2014
-;       Support IRAF TNX porjection  M. Sullivan U. of Southamptom  Mar 2014
-;       No longer check that CDELT[0] NE 1  W. Landsman Apr 2015
-;       Ignore PV values if SIP distortion W. Landsman  Jan 2021
-;       Allow distortion lookup tables (CPDIS) to be passed & applied:
-;       SJT, Oct 2024
+;		This routine which works with externally-passed
+;		distortion tables, is now deprecated. Use
+;		FITSHEAD2WCS with the FILENAME keyword, or
+;		WCS_APPEND_TABLES to merge the tables into the WCS
+;		structure. SJT: 3/11/25.
 ;-
   
   common Broyden_coeff, pv1, pv2 ;Needed for TPV transformation
   compile_opt idl2
 
+  print, "punch_xy2ad, is now deprecated, use fitshead2wcs & wcs_append_tables"
+  print, "to use the distortion tables."
+ 
   if N_params() LT 4 then begin
      print, 'Syntax -- XY2AD, x, y, astr, a, d'
      return
@@ -136,7 +48,7 @@ pro punch_xy2ad, x, y, astr, a, d, xhdr = xhdr, yhdr = yhdr, xtable = $
      crpix2 = sxpar(hdis2, 'CRPIX*')
      xpos = (x+1-crval2[0])/cdelt2[0] + crpix2[0]
      ypos = (y+1-crval2[1])/cdelt2[1] + crpix2[1]		
-     dyp = interpolate(imdis2, xpos, ypos)
+     dyp = interpolate(ytable, xpos, ypos)
 
      xp = x + dxp
      yp = y + dyp
