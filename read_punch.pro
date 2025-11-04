@@ -18,7 +18,8 @@
 ;
 ;	index - fits metadata (structure or string array) 
 ;	data - Total Brightness and Polarized Brighness image datacube
-;             (for higher level products) 
+;             (for higher level products)
+;             Whatever is in the main data unit for low-level products.
 ;             Only Total Brightness for QuickPUNCH products
 ;
 ; Keywords:
@@ -60,7 +61,7 @@
 ;
 ;   Notes:
 ;     Reads one fits file at a time. If you plan to run for a
-;     directory, ensure to run in a loop. 
+;     directory, ensure to run in a loop, or use punch_stack. 
 ;     The first HDU contains primary data products while the second
 ;     HDU contains uncertainty information. 
 ;     The output generated for one fits file can be a datacube with
@@ -157,7 +158,7 @@ pro read_punch, tfile, index, data, $
         
         if uncertainty then begin
            print, 'Reading uncertainty HDU...'
-           uns = string(lunc, format = "('[',i0,']')")
+           uns = string(lunc[0], format = "('[',i0,']')")
            data_uncert = fitsio_read_image(tfile+uns, htest, $
                                            so_path = so_path) 
 
@@ -244,7 +245,7 @@ pro read_punch, tfile, index, data, $
            if n_ext eq 1 then begin
               message, /cont, "File does not contain an uncertainty."
            endif else begin
-              data_uncert = readfits(ucfile, uhdr, ext = lunc)
+              data_uncert = readfits(ucfile, uhdr, ext = lunc[0])
               if keyword_set(string_header) then index_uncert = uhdr $
               else index_uncert = fitshead2struct(uhdr)
            endelse

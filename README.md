@@ -33,7 +33,7 @@ regular `readfits` procedure.
 In general, it is probably better to use the shared library by adding
 the `/use_shared_lib` keyword. However the use of DLL's is not (yet)
 supported by GDL so `imcopy` must be used in that case. This is
-cofigured as the default behaviour.
+configured as the default behaviour.
 
 **N.B.** The layout of a Rice-compressed file is assumed to be:
 
