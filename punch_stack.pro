@@ -7,7 +7,7 @@
 ;	punch_stack, data, hdr
 ;
 ; Arguments:
-;	data	float	A variable to return the data stack,
+;	sdata	float	A variable to return the data stack,
 ;	hdr	list	A variable to return the FITS headers.
 ;			
 ;
