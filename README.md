@@ -118,22 +118,6 @@ by `fitsio_read_image` to be the actual image parameters
 `imcopy`. This is only intended to be used internally within
 `read_punch`.
 
-
-## Building imcopy
-
-is an ancillary program that is part of the cfitsio
-library. However many Linux distributions do not build it by
-default. It can be simply built by downloading the [cfitsio
-source](https://heasarc.gsfc.nasa.gov/fitsio/) and going to the
-`utilities` subdirectory and compiling with (assuming the cfitsio
-library is installed):
-
-    gcc -o imcopy imcopy.c $(pkg-config -libs -cflags cfitsio$)
-
-and copying the executable to somewhere in your path
-(e.g. `/usr/local/bin` or `~/bin` if you don't have root access).
-
-
 ## Using latest SSW package
 We recommend using the latest SSW package to run these routines smoothly
 across various platforms (Windows, Linux, MacOS etc.).
@@ -151,7 +135,7 @@ We welcome all contributions. Please open a pull request to contribute.
 
 #### imcopy
 
-is an ancillary program that is part of the cfitsio
+imcopy is an ancillary program that is part of the cfitsio
 library. However many Linux distributions do not build it by
 default. It can be simply built by downloading the [cfitsio
 source](https://heasarc.gsfc.nasa.gov/fitsio/) and going to the
