@@ -5,114 +5,19 @@ pro punch_ad2xy, a, d, astr, x, y, xhdr = xhdr, yhdr = yhdr, xtable = $
 ;     AD2XY
 ; PURPOSE:
 ;     Compute X and Y from native coordinates and a FITS  astrometry structure
-; EXPLANATION:
-;     If a WCS projection (Calabretta & Greisen 2002, A&A, 395, 1077) is 
-;     present, then the procedure WCSXY2SPH is used to compute native 
-;     coordinates.   If distortion is present then this is corrected.  
-;     In all cases, the inverse of the CD matrix is applied and offset 
-;     from the reference pixel to obtain X and Y. 
-;
-;     AD2XY is generally meant to be used internal to other procedures.   For 
-;     interactive purposes, use ADXY.
-;
-; CALLING SEQUENCE:
-;     AD2XY, a ,d, astr, x, y   
-;
-; INPUTS:
-;     A -     R.A. or longitude in DEGREES, scalar or vector.    
-;     D -     Dec. or longitude in DEGREES, scalar or vector
-;             If the input A and D are arrays with 2 or more dimensions,
-;             they will be converted to a 1-D vectors.
-;     ASTR - astrometry structure, output from EXTAST procedure containing:
-;        .CD   -  2 x 2 array containing the astrometry parameters CD1_1 CD1_2
-;               in DEGREES/PIXEL                                   CD2_1 CD2_2
-;        .CDELT - 2 element vector giving increment at reference point in
-;               DEGREES/PIXEL
-;        .CRPIX - 2 element vector giving X and Y coordinates of reference pixel
-;               (def = NAXIS/2) in FITS convention (first pixel is 1,1)
-;        .CRVAL - 2 element vector giving coordinates of the reference pixel 
-;               in DEGREES
-;        .CTYPE - 2 element vector giving projection types 
-;        .LONGPOLE - scalar longitude of north pole (default = 180) 
-;        .PV2 - Vector of additional parameter (e.g. PV2_1, PV2_2) needed in 
-;               some projections
-;
-;     Fields added for version 2:
-;      .PV1 - Vector of projection parameters associated with longitude axis
-;      .AXES  - 2 element integer vector giving the FITS-convention axis 
-;               numbers associated with astrometry, in ascending order. 
-;               Default [1,2].
-;      .REVERSE - byte, true if first astrometry axis is Dec/latitude
-;      .COORDSYS - 1 or 2 character code giving coordinate system, including
-;                 'C' = RA/Dec, 'G' = Galactic, 'E' = Ecliptic, 'X' = unknown.
-;      .RADECSYS - String giving RA/Dec system e.g. 'FK4', 'ICRS' etc.
-;      .EQUINOX  - Double giving the epoch of the mean equator and equinox
-;      .DATEOBS  - Text string giving (start) date/time of observations
-;      .MJDOBS   - Modified julian date of start of observations.
-;      .X0Y0     - Implied offset in intermediate world coordinates if user has
-;                  specified a non-standard fiducial point via PV1 and also
-;                  has set PV1_0a =/ 0 to indicate that the offset should be
-;                  applied in order to place CRVAL at the IWC origin.
-;                  Should be *added* to the IWC derived from application of
-;                  CRPIX, CDELT, CD to the pixel coordinates.
-;
-;        .DISTORT - Optional substructure specifying distortion parameters
-;
-; Keyword inputs:
-;	xhdr	string	The header for the X-distortion map.
-;	yhdr	string	The header for the Y-distortion map.
-;	xtable	double	The X distortion map.
-;	ytable	double	The Y distortion map.
-;
-; OUTPUTS:
-;     X     - row position in pixels, scalar or vector
-;     Y     - column position in pixels, scalar or vector
-;
-;     X,Y will be in the standard IDL convention (first pixel is 0), and
-;     *not* the FITS convention (first pixel is 1)
-; NOTES:
-;      AD2XY tests for presence of WCS coordinates by the presence of a dash 
-;      in the 5th character position in the value of CTYPE (e.g 'DEC--SIN').
-; COMMON BLOCKS:
-;      BROYDEN_COMMON - Used when solving for a reverse distortion tranformation
-;        (either SIP or TGV) by iterating on the forward transformation.
-; PROCEDURES USED:
-;       CGErrorMsg (from Coyote Library)
-;       TAG_EXIST(), WCSSPH2XY
-; REVISION HISTORY:
-;     Converted to IDL by B. Boothman, SASC Tech, 4/21/86
-;     Use astrometry structure,  W. Landsman      Jan. 1994   
-;     Do computation correctly in degrees  W. Landsman       Dec. 1994
-;     Only pass 2 CRVAL values to WCSSPH2XY   W. Landsman      June 1995
-;     Don't subscript CTYPE      W. Landsman       August 1995        
-;     Understand reversed X,Y (X-Dec, Y-RA) axes,   W. Landsman  October 1998
-;     Consistent conversion between CROTA and CD matrix W. Landsman October 2000
-;     No special case for tangent projection W. Landsman June 2003
-;     Work for non-WCS coordinate transformations W. Landsman Oct 2004
-;     Use CRVAL reference point for non-WCS transformation  W.L. March 2007
-;     Use post V6.0 notation  W.L. July 2009
-;     Allows use of Version 2 astrometry structure & optimised for
-;     large input arrays. Wrap test for cylindrical coords. J. P. Leahy July 2013
-;     Wrap test failed for 2d input arrays 
-;                              T. Ellsworth-Bowers/W.Landsman July 2013
-;     Tweaked to restore shape of arrays on exit JPL Aug 2013.
-;     ..and make them scalars if input is scalar JPL Aug 2013
-;     Iterate when forward SIP coefficients are supplied but not the reverse
-;     coefficients.    Don't compute poles if not a cylindrical system
-;              W. Landsman           Dec 2013
-;     Evaluate TPV distortion (SCAMP) if present  W. Landsman  Jan 2014
-;     Support IRAF TNX projection M. Sullivan U. of Southhamptom  Mar 2014
-;     No longer check that CDELT[0] differs from 1 W. Landsman Apr 2015
-;     Default projection is PIXEL not Tangent  W. Landsman Oct 2017
-;     Ignore PV values if SIP distortion present W. Landsman Jan 2021
-;       Allow distortion lookup tables (CPDIS) to be passed & applied:
-;       SJT, Oct 2024   
+;		This routine which works with externally-passed
+;		distortion tables, is now deprecated. Use
+;		FITSHEAD2WCS with the FILENAME keyword, or
+;		WCS_APPEND_TABLES to merge the tables into the WCS
+;		structure. SJT: 3/11/25.
 ;-
 
  compile_opt idl2
  common broyden_coeff, xcoeff, ycoeff
  
-
+ print, "punch_ad2xy, is now deprecated, use fitshead2wcs & wcs_append_tables"
+ print, "to use the distortion tables."
+ 
  if N_params() lT 4 then begin
         print,'Syntax -- AD2XY, a, d, astr, x, y'
         return

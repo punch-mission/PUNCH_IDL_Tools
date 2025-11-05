@@ -24,44 +24,49 @@
 ;	/use_shared	If set, use the shared library method to
 ;			access the compressed FITS file.
 ;	path	string	The path to start the search for data.
-;	/select_all	If set, then select all ths fits files in
+;	/select_all	If set, then select all the fits files in
 ;			PATH, otherwise a dialogue is used.
 ;	wcs	struct	A variable to return the WCS information for
 ;			the images (FITSHEAD2WCS).
 ;	ast	struct	A variable to return thr WCS information for
-;			the images (EXTAST)
+;			the images (EXTAST) [DEPRECATED]
 ;	system	string	Specify which coordinate system is in required
 ;			for the WCS.
-;	/as_list	If set then the WCS & AST parameters are returned in
+;	/as_list	If set then the WCS parameters are returned in
 ;			lists of structures rather than arrays. This
 ;			allows for different structures for different
 ;			elements. Headers are always returned as lists.
 ;	file_list string	Specify a list of files to
 ;			read. Must be all full paths or all
-;			basenames. If it is a null variable then the
+;			basenames. If the keyword is not set then a
+;			dialogue is used. If it is a null variable then the
 ;			list is returned.
-;	/fudge_pv2	Fudge the PV2 parameters when they have an
-;			illegal value.
 ;	[xy]dhdr list	Variables to return the distortion headers.
 ;	[xy]distort dbl	Variables to return the distortion maps.
+;	imcopy_path str	Specify an executable name or path for imcopy.
+;			(Implies use_shared=0).
+;	/repair		If set then use repair_punch_head to fix FITS header.
 ;
 ; History:
 ;	Original: 27/6/24; SJT
 ;	Add WCS: 28/6/24; SJT
 ;	Add AS_LIST & FILE_LIST: 16/7/24; SJT
 ;	Add uncertainties and distortions: 28/10/24; SJT
+;	CLean up: 4/11/25; SJT
 ;-
 
 pro punch_stack, sdata, hdr, uncertain = uncertain, uhdr = uhdr, $
                  polar = polar, use_shared = use_shared, $
                  path = path, select_all = select_all, wcs = wcs, $
-                 system = system, ast = ast, as_list = as_list, $ $
-                 file_list = file_list, fudge_pv2 = fudge_pv2, $
+                 system = system, ast = ast, as_list = as_list, $ 
+                 file_list = file_list, imcopy_path = imcopy_path, $
                  xdhdr = xdhdr, xdistort = xdistort, $
-                 ydhdr = ydhdr, ydistort = ydistort
+                 ydhdr = ydhdr, ydistort = ydistort, $
+                 repair = repair
 
   defsysv, '!gdl', exist = isgdl
-  if n_elements(use_shared) eq 0 then use_shared = ~isgdl
+  if n_elements(use_shared) eq 0 then $
+     use_shared = ~(isgdl || keyword_set(imcopy_path))
   
   if ~keyword_set(path) then path = './' $
   else begin
@@ -92,27 +97,10 @@ pro punch_stack, sdata, hdr, uncertain = uncertain, uhdr = uhdr, $
      read_punch, flist[j], index, data, data_uncert = udata, $
                  index_uncert = uhdr, use_shared = use_shared, $
                  /string_header, xdidx = xdhdr1, xdistort = xdistort1, $
-                 ydidx = ydhdr1, ydistort = ydistort1
+                 ydidx = ydhdr1, ydistort = ydistort1, $
+                 imcopy_path = imcopy_path
 
-     if keyword_set(fudge_pv2) then begin
-        prj = fxpar(index, 'CTYPE1')
-        if strpos(prj, 'AZP') ge 0 then begin
-           pv2_1 = fxpar(index, 'PV2_1')
-           if pv2_1 lt 0 then begin
-              fxaddpar, index,  'PV2_1', 0.d
-              nfdg[0] ++
-           endif
-        endif
-        
-        prja = fxpar(index, 'CTYPE1A')
-        if strpos(prja, 'AZP') ge 0 then begin
-           pv2_1a = fxpar(index, 'PV2_1A')
-           if pv2_1a lt 0 then begin
-              fxaddpar, index,  'PV2_1A', 0.d
-              nfdg[1] ++
-           endif
-        endif
-     endif
+     if keyword_set(repair) then repair_punch_head, index
      
      if j eq 0 then begin       ; Initializations based on requested
                                 ; parameters  and properties of the
@@ -141,11 +129,21 @@ pro punch_stack, sdata, hdr, uncertain = uncertain, uhdr = uhdr, $
            if keyword_set(as_list) then $
               wcs = list(length = nfiles) $
            else begin
-              wcs0 = fitshead2wcs(index, system = system)
+              if use_shared then $
+                 wcs0 = fitshead2wcs(index, system = system, $
+                                     filename = flist[j]) $
+              else begin
+                 wcs0 = fitshead2wcs(index, system = system)
+                 if n_elements(xdhdr) ne 0 then $
+                    wcs_append_tables, wcs0, xdhdr, xdistort, $
+                                       ydhdr, ydistort
+              endelse
               wcs = replicate(wcs0, nfiles)
            endelse
         endif
         if arg_present(ast) then begin
+           print, "Warning, the use of ASTROM astrometry is no " + $
+                  "longer maintained."
            if keyword_set(as_list) then $
               ast = list(length = nfiles) $
            else begin
@@ -215,7 +213,15 @@ pro punch_stack, sdata, hdr, uncertain = uncertain, uhdr = uhdr, $
      if ucflag then uhdr[j] = index_uncert
      
      if arg_present(wcs) then begin
-        wcs1 =  fitshead2wcs(index, system = system)
+        if use_shared then $
+           wcs1 = fitshead2wcs(index, system = system, $
+                               filename = flist[j]) $
+        else begin
+           wcs1 = fitshead2wcs(index, system = system)
+           if n_elements(xdhdr1) ne 0 then $
+              wcs_append_tables, wcs1, xdhdr1, xdistort1, $
+                                 ydhdr1, ydistort1
+        endelse
         if keyword_set(as_list) then $
            wcs[j] = wcs1 $
         else begin
@@ -223,6 +229,7 @@ pro punch_stack, sdata, hdr, uncertain = uncertain, uhdr = uhdr, $
            wcs[j] = wcs0
         endelse
      endif
+    
      if arg_present(ast) then begin
         extast, index, ast1, alt = system
         if keyword_set(as_list) then $
@@ -234,5 +241,4 @@ pro punch_stack, sdata, hdr, uncertain = uncertain, uhdr = uhdr, $
      endif
   endfor
 
-  if keyword_set(fudge_pv2) then print, "Fudged:", nfdg
 end

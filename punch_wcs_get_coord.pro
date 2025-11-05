@@ -1,137 +1,12 @@
 ;+
-; Project     :	STEREO
-;
 ; Name        :	PUNCH_WCS_GET_COORD()
 ;
 ; Purpose     :	Get coordinate values for WCS structures
-;
-; Category    :	FITS, Coordinates, WCS
-;
-; Explanation :	This procedure takes a WCS structure, and calculates the data
-;               coordinates at each IDL pixel position.
-;
-; Syntax      :	Coordinates = PUNCH_WCS_GET_COORD( WCS  [, PIXELS] )
-;
-; Examples    :	Suppose that WCS.NAXIS = [10,20].  The result of the command
-;
-;                       COORD = PUNCH_WCS_GET_COORD(WCS)
-;
-;               would be an array with dimensions [2,10,20], where
-;               X=COORD[0,*,*] and Y=COORD[1,*,*].
-;
-;               To get the coordinates of a specific pixel, use e.g.
-;
-;                       COORD = WCS_GET_COORD(WCS, [5,5])
-;
-;               If IX and IY contain N pixel coordinates along the X and Y
-;               directions respectively, use
-;
-;                       IXY = LONARR(2, N_ELEMENTS(IX))
-;                       IXY[0,*] = IX
-;                       IXY[1,*] = IY
-;                       COORD = PUNCH_WCS_GET_COORD(WCS, IXY)
-;
-; Inputs      :	WCS     = Structure from FITSHEAD2WCS
-;
-; Opt. Inputs :	PIXELS  = If passed, then contains an array of IDL pixel
-;                         locations to return coordinates from.  Otherwise,
-;                         coordinates are returned for all the pixels in the
-;                         array.
-;
-;                         The first dimension must be the number of axes
-;                         (except for pixel lists).
-;
-;                         Note that IDL pixel locations differ by 1 from FITS
-;                         pixels, e.g. IDL pixel 0 is FITS pixel 1, etc.
-;
-;                         However, pixel lists are an exception.  For pixel
-;                         lists, the PIXELS array contains row numbers in the
-;                         FITS binary table, ranging from 1 to N to match the
-;                         calling sequence of FXBREAD.  Normally, PIXELS is a
-;                         one dimensional array when used with pixel lists.
-;                         The output array will have an additional axis
-;                         prepended for the coordinate axes.
-;
-; Outputs     :	The result of the function is the array of coordinates, where
-;               the first dimension steps through each coordinate axis.
-;
-; Opt. Outputs:	None.
-;
-; Keywords    :	XHDR, YHDR = FITS headers for X & Y distortion tables.
-; 		XTABLE, YTABLE = X & Y distortion tables.
-; 		RELATIVE   = If set, then only intermediate positions
-;                            relative to the reference value are returned,
-;                            i.e. CRVALi is not added.  This is mainly for
-;                            internal use by some of the routines.
-;
-;               QUICK      = Depending on the projection, using /QUICK selects
-;                            a quick approximation, rather than the full
-;                            computationally expensive spherical projection.
-;
-;               FORCE_PROJ = Some projection routines, such as WCS_PROJ_TAN,
-;                            contain logic which automatically selects the
-;                            /QUICK option under certain conditions.  Using
-;                            /FORCE_PROJ forces the full spherical coordinate
-;                            transformation to be calculated.
-;
-;               MISSING    = Value to fill missing values with.  If not passed,
-;                            then missing values are filled with IEEE
-;                            Not-A-Number (NaN) values.  This is for
-;                            coordinate systems, such as heliographic, that
-;                            might not be defined for all pixels.
-;
-;               NOWRAP     = If set, don't wrap the longitude values to be
-;                            between +/-180 degrees.  Only used for cylindrical
-;                            projections (CAR,CEA,CYP,MER).
-;
-;               POS_LONG   = If set, then force the output longitude to be
-;                            positive, i.e. between 0 and 360 degrees.  The
-;                            default is to return values between +/- 180
-;                            degrees.
-;
-;               TOLERANCE  = Convergence tolerance for reiterative technique
-;                            used by some projections.
-;
-;               MAX_ITER   = Maximum number of iterations.  Default is 1000.
-;
-;               NODISTORTION = If set, then don't apply any distortion keywords.
-;
-; Calls       :	VALID_WCS, PRODUCT, TAG_EXIST, WCS_PROJ_*, WCS_APPLY_DISTORTION,
-;               WCS_APPLY_DIST_TABLE
-;
-; Common      :	None.
-;
-; Restrictions:	SOLARNET distortions are only handled for binary tables.
-;               APPLY=5 and APPLY=6 are treated identically.  ASSOCIATE=5 is
-;               ignored.
-;
-; Side effects:	None.
-;
-; Prev. Hist. :	None.
-;
-; History     :	Version 1, 19-Apr-2005, William Thompson, GSFC
-;               Version 2, 26-Apr-2005, William Thompson, GSFC
-;                       Added AZP and SIN projections, MISSING keyword
-;		Version 3, 29-Apr-2005, William Thompson, GSFC
-;			Added projections AIT,CAR,CEA,CYP,MER,MOL,PAR,SFL
-;               Version 4, 03-Jun-2005, William Thompson, GSFC
-;                       Added projections ARC,BON,COD,COE,COO,COP,STG,SZP,ZEA
-;               Version 5, 08-Jun-2005, William Thompson, GSFC
-;                       Add support for spectral projections
-;               Version 6, 21-Dec-2005, William Thompson, GSFC
-;                       Added projections AIR, CSC, PCO, QSC, TSC, ZPN
-;                       Added keywords TOLERANCE, MAX_ITER
-;               Version 7, 12-Oct-2006, William Thompson, GSFC
-;                       Added support for pixel lists.
-;               Version 8, 28-Mar-2013, WTT, Added keywords NOWRAP, POS_LONG
-;               Version 9, 28-Jun-2019, WTT, Handle distortion keywords
-;               Version 10,  9-May-2023, WTT, add calls to WCS_APPLY_DIST_TABLE
-;               Version 11, 11-May-2023, WTT, apply SOLARNET distortion for
-;                       binary tables.
-;               PUNCH_WCS... 30/10/24, incorporate distortion table
-;               	handling for PUNCH (SJT)
-;
-; Contact     :	WTHOMPSON
+;		This routine which works with externally-passed
+;		distortion tables, is now deprecated. Use
+;		FITSHEAD2WCS with the FILENAME keyword, or
+;		WCS_APPEND_TABLES to merge the tables into the WCS
+;		structure. SJT: 3/11/25.
 ;-
 ;
 function punch_wcs_get_coord, wcs, pixels, xhdr = xhdr, yhdr = yhdr, $
@@ -144,6 +19,10 @@ function punch_wcs_get_coord, wcs, pixels, xhdr = xhdr, yhdr = yhdr, $
                               pos_long = pos_long, nodistortion = $
                               nodistortion 
   on_error, 2
+
+  print, "punch_wcs_get_coord, is now deprecated, use fitshead2wcs & wcs_append_tables"
+  print, "to use the distortion tables."
+
 ;
   if not valid_wcs(wcs) then message, 'Input not recognized as WCS structure'
 ;

@@ -4,86 +4,11 @@
 ; Name        :	PUNCH_WCS_GET_PIXEL()
 ;
 ; Purpose     :	Inverse of PUNCH_WCS_GET_COORD()
-;
-; Category    :	FITS, Coordinates, WCS
-;
-; Explanation :	This procedure takes a WCS structure, and converts coordinates
-;               back into IDL pixel positions.
-;
-; Syntax      :	Pixels = PUNCH_WCS_GET_PIXEL( WCS, COORD )
-;
-; Examples    :	Pixels = PUNCH_WCS_GET_PIXEL( WCS, [0,0] )
-;
-;               Returns the pixel coordinate of Sun-center for a 2D image in
-;               helioprojective-cartesian coordinates.
-;
-; Inputs      :	WCS   = Structure from FITSHEAD2WCS
-;
-;		COORD = An array of coordinates to return pixel locations for.
-;			The first dimension must be the number of axes.
-;
-; Opt. Inputs :	
-;
-; Outputs     :	The result of the function is the array of IDL pixel locations,
-;		where the first dimension steps through each coordinate axis.
-;
-;               Note that IDL pixel locations differ by 1 from FITS pixels,
-;               e.g. IDL pixel 0 is FITS pixel 1, etc.
-;
-; Opt. Outputs:	None.
-;
-; Keywords    :	XHDR, YHDR = FITS headers for X & Y distortion tables.
-; 		XTABLE, YTABLE = X & Y distortion tables.
-; 		QUICK      = Depending on the projection, using /QUICK selects
-;                            a quick approximation, rather than the full
-;                            computationally expensive spherical projection.
-;
-;               FORCE_PROJ = Some projection routines, such as WCS_PROJ_TAN,
-;                            contain logic which automatically selects the
-;                            /QUICK option under certain conditions.  Using
-;                            /FORCE_PROJ forces the full spherical coordinate
-;                            transformation to be calculated.
-;
-;               MISSING    = Value to fill missing values with.  If not passed,
-;                            then missing values are filled with IEEE
-;                            Not-A-Number (NaN) values.
-;
-;               TOLERANCE  = Convergence tolerance for reiterative technique
-;                            used by the MOL projection.
-;
-;               MAX_ITER   = Maximum number of iterations for the MOL
-;                            projection.
-;
-;               TOLERANCE and MAX_ITER are also used for inverting distortion
-;               corrections, in which case the defaults are 1E-3 (pixels) and
-;               100 respectively.  See WCS_INV_PROJ_MOL for the defaults when
-;               applied to the MOL projection.  Depending on the projection,
-;               these keywords may also be used for the forward projection, in
-;               which case the 
-;
-;               NODISTORTION = If set, then don't apply any distortion keywords.
-;
-; Calls       :	VALID_WCS, PRODUCT
-;
-; Common      :	None.
-;
-; Restrictions:	None.
-;
-; Side effects:	None.
-;
-; Prev. Hist. :	None.
-;
-; History     :	Version 1, 03-Jun-2005, William Thompson, GSFC
-;               Version 2, 08-Jun-2005, William Thompson, GSFC
-;                       Add support for spectral projections
-;               Version 3, 21-Dec-2005, William Thompson, GSFC
-;                       Added projections AIR,CSC,MOL,PCO,QSC,TSC,ZPN
-;                       Added keywords TOLERANCE, MAX_ITER
-;               Version 4, 03-Jul-2019, WTT, Handle distortion keywords
-;               PUNCH_WCS... 30/10/24, incorporate distortion table
-;               	handling for PUNCH (SJT)
-;
-; Contact     :	WTHOMPSON
+;		This routine which works with externally-passed
+;		distortion tables, is now deprecated. Use
+;		FITSHEAD2WCS with the FILENAME keyword, or
+;		WCS_APPEND_TABLES to merge the tables into the WCS
+;		structure. SJT: 3/11/25.
 ;-
 ;
 function punch_wcs_get_pixel, wcs, coord, xhdr = xhdr, yhdr = yhdr, $
@@ -92,6 +17,10 @@ function punch_wcs_get_pixel, wcs, coord, xhdr = xhdr, yhdr = yhdr, $
                               missing = missing, tolerance = tolerance, $
                               max_iter = max_iter, nodistortion = nodistortion
   on_error, 2
+
+  print, "punch_wcs_get_pixel, is now deprecated, use fitshead2wcs & wcs_append_tables"
+  print, "to use the distortion tables."
+
 ;
   if n_params() ne 2 then message, $
      'Syntax: Result = PUNCH_WCS_GET_PIXEL(WCS, COORD)'
@@ -103,7 +32,7 @@ function punch_wcs_get_pixel, wcs, coord, xhdr = xhdr, yhdr = yhdr, $
 ;  distortion corrections will be ignored
 
   apply_dist = tag_exist(wcs, 'DISTORTION') && ~keyword_set(nodistortion) $
-     && ~keyword_set(xdistort) && ~keyword_set(ydistort)
+     || (keyword_set(xdistort) && keyword_set(ydistort))
 
 ;  Calculate the indices for each dimension, relative to the reference pixel.
 ;
