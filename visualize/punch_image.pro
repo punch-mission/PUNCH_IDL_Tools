@@ -105,7 +105,7 @@ function punch_image, data, normalization = normalization, vmin = vmin, vmax = v
 
 			;; make the colorbar
 			if cb_position[0] eq -1 then begin
-				image_pos = i.position
+				image_pos = im.position
 				cb_position = [image_pos[2] + 0.01, image_pos[1], image_pos[2] + 0.04, image_pos[3]]
 			endif
 			cb = COLORBAR(TARGET=im, orientation = 1, tickvalues = cb_val_pos[*, 0], tickname = cb_ticknames, /BORDER, $
