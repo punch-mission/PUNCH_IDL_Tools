@@ -36,15 +36,8 @@ function punch_cb_positions, cb_vals, steps
 	step_size = ( max(cb_vals) - min(cb_vals) ) / (steps - 1D)
 	step_values = (dindgen(steps) * step_size) + min(cb_vals)
 
-
-	cb_positions = LONARR(N_ELEMENTS(step_values))
-	FOR j = 0, N_ELEMENTS(step_values)-1 DO BEGIN
-	  k = VALUE_LOCATE(cb_vals, step_values[j])
-	  IF k LT 0 THEN cb_positions[j] = 0 $
-		  ELSE $ 
-			IF k GE N_ELEMENTS(cb_vals)-1 THEN cb_positions[j] = N_ELEMENTS(cb_vals)-1 $
-	  		ELSE cb_positions[j] = (ABS(cb_vals[k] - step_values[j]) LE ABS(cb_vals[k+1] - step_values[j])) ? k : k+1
-	ENDFOR
+	xarr = findgen(n_elements(cb_vals))
+	cb_positions = interpol(xarr, cb_vals, step_values, /spline)
 
 	return, [[cb_positions], [step_values]]
 
